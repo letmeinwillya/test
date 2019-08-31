@@ -1,4 +1,4 @@
-## Thank you for your interest in Substantial.
+## Thank you for your interest in .
 
 This is a small problem that we would like you to solve so that we can get an
 idea of your coding ability. Your submission will be run in a clean environment
@@ -25,4 +25,4 @@ If applying for a specific role, please choose the appropriate platform for the 
 - [iOS](README.ios.md)
 Questions?
 ----------
-Please email jobs+coding-test@substantial.com if you have any questions.
+
