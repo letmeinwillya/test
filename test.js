@@ -1,3 +1,5 @@
+//READ ME: In order to run this from local machine, please copy sample-input.txt file in the same directory as test.js
+
 var fs = require("fs");
 //TODO: instead of using a global variable, this should be passed to functions and then updated
 var inputMap = new Map();
