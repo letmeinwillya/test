@@ -1,7 +1,8 @@
 var fs = require("fs");
-
+//TODO: instead of using a global variable, this should be passed to functions and then updated
 var inputMap = new Map();
 
+//TODO:buildRulesEngine() function is called everytime for each line in the input file
 function splitLine(lineFromFile) {
   var businessRules = buildRulesEngine();
   var rating = parseInt(lineFromFile.slice(-1));
@@ -64,6 +65,10 @@ for (const singleInputLine of inputFileData) {
 console.log("Done ");
 
 console.log("New Mappings: ");
+
+//TODO: The output map should be ordered in Descending order on the values. For example, the highest points given to a flavor should come first
+//If two flavors have same points, the one with shorter name should appear first in the list
+
 console.log(inputMap);
 
 console.log("New Mappings Done ");
