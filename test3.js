@@ -1,6 +1,9 @@
 var fs = require("fs");
 var log = require('loglevel');
 const path = require('path');
+var os = require("os");
+
+
 
 
 //setting log levels to INFO
@@ -8,8 +11,9 @@ log.setLevel(log.levels.DEBUG);
 
 
 /**
- * Parses the string representing the single line from the inputfile, looks up its points from the business rules map, stores the corresponding points
- * in another Map
+ * Parses the string representing the single line from the inputfile, 
+ * looks up its points from the business rules map, stores the corresponding points
+ * in another Map against the name of the flavor as the key and points as its value
  * @param {*} lineFromFile 
  * @param {*} businessRules 
  * @param {*} inputMap 
@@ -63,6 +67,7 @@ function processInputData(fileData) {
   2 points to their third favorite, 
   1 point to their fourth favorite and 
   0 points to their fifth favorite.
+  @return Map containing the ratings as keys and points as values
 */
 function buildRulesEngine() {
   const favoriteToPointsMapping = new Map();
@@ -84,18 +89,7 @@ function buildRulesEngine() {
  */
 function sortMap(mapToSort){
 
-/*
-    for (var [key, value] of mapToSort) {
-        log.debug(key, value);
-    }
-*/
     let sortedMap = new Map([...mapToSort].sort(([k, v], [k2, v2])=> {
-        /*
-        log.debug(' k ' + k);
-        log.debug(' v ' + v);
-        log.debug(' k2 ' + k2);
-        log.debug(' v2 ' + v2);
-      */
 
         if (v > v2) {
           return -1;
@@ -104,13 +98,15 @@ function sortMap(mapToSort){
           return 1;
         }
         if(v === v2 ){
-            log.debug(' v === v2, v: ' + v);
-            log.debug(' v === v2, v2: ' + v2);
+            log.debug(' v === v2, k, v: ' + k + ', ' + v);
+            log.debug(' v === v2, k2, v2: ' + k2 + ',' + v2);
             log.debug(' k.length: ' + k.length);
             log.debug(' k2.length: ' + k2.length);
             
             if(k.length < k2.length){
                 return -1;
+            }else if(k.length > k2.length) {
+                return 1;
             }else{
                 return 0;
             }
@@ -121,24 +117,7 @@ function sortMap(mapToSort){
       return sortedMap;
 }
 
-/**
- * This function manages the overall Taste Testing system.
- */
-function runTestingSystem(){
 
-    var fileName = readCommandLine();
-
-    log.debug('About to read the file: ' + fileName);
-
-    var inputFileData = fs.readFileSync(fileName, "utf-8").split(/\r?\n/);
-
-    var finalPoints = processInputData(inputFileData);
-
-    var sortedMap = sortMap(finalPoints);
-
-    log.debug(sortedMap);
-
-}
 /**
  * Reads command line values, assumes the filename will be provided 
  * If no input file name is provided, the program exists with code 1
@@ -152,7 +131,7 @@ function readCommandLine(){
     
 
     if (myArgs.length < 3){
-        log.error('Please provide input filename, format: <path to node> <path to input filename>')
+        log.error('Please provide input filename, format: node ' + myArgs[1] + ' <name of input file.txt>')
         process.exit(1);
     }else{
         fullPathToFile = myArgs[2];
@@ -171,4 +150,71 @@ function readCommandLine(){
     return normalizedFilePath;
 }
 
-runTestingSystem();
+
+function buildOutputString(mapToExport){
+    var outputString='';
+    var index = 0;
+    var COMMA = ',';
+    var SPACE = ' ';
+    var DOT = '.';
+    var PTS = 'pt';
+
+    var mapEntries = mapToExport.entries();
+
+    for (const entry of mapEntries) {
+        index = index +1;
+        PTS = (parseInt(entry[1]) > 1 ? 'pts' :'pt');
+        outputString = outputString + index + DOT + SPACE+ entry[0] + COMMA +  SPACE + entry[1] + SPACE + PTS + 
+            ((index === mapEntries.length) ? '' : os.EOL);
+      }
+
+    /*
+    mapToExport.forEach(
+            
+        (k, v) => 
+                //console.log(`key:${k} value:${v}`)
+                {
+                    log.debug(outputString + `${k}` +  `${v}` + os.EOL);}
+            
+    )
+    */
+
+
+
+    log.debug(outputString);
+return outputString;
+}
+
+/**
+ * This function manages the overall Taste Testing system.
+ * It accepts a file name from user on the command line and outputs the most favorite flavors on the console
+ * 
+ */
+function runTasteTestingSystem(){
+
+    var fileName = readCommandLine();
+
+    log.debug('About to read the file: ' + fileName);
+
+    var inputFileData = fs.readFileSync(fileName, "utf-8").split(/\r?\n/);
+
+    var finalPoints = processInputData(inputFileData);
+
+    var sortedMap = sortMap(finalPoints);
+
+    //log.debug(sortedMap);
+
+    buildOutputString(sortedMap);
+
+    return sortedMap;
+
+}
+
+runTasteTestingSystem();
+
+//exporting method so they can be used by the testing framework Jasmine
+// Module Exports
+ 
+module.exports = {
+    processLine: processLine,
+}
