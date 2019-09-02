@@ -3,11 +3,8 @@ var log = require('loglevel');
 const path = require('path');
 var os = require("os");
 
-
-
-
 //setting log levels to INFO
-log.setLevel(log.levels.DEBUG);
+log.setLevel(log.levels.INFO);
 
 
 /**
@@ -19,6 +16,7 @@ log.setLevel(log.levels.DEBUG);
  * @param {*} inputMap 
  */
 function processLine(lineFromFile, businessRules, inputMap) {
+    log.debug('processLine - Start');
   var rating = parseInt(lineFromFile.slice(-1));
   var nameOfFlavor = lineFromFile.substr(0, lineFromFile.length - 2);
 
@@ -45,6 +43,7 @@ function processLine(lineFromFile, businessRules, inputMap) {
 
     inputMap.set(nameOfFlavor, points); // store name of the flavor as the key and corresponding points as the value
   }
+  log.debug('processLine - End');
 }
 
 /**
@@ -54,11 +53,13 @@ function processLine(lineFromFile, businessRules, inputMap) {
  * @param {*} fileData 
  */
 function processInputData(fileData) {
+    log.debug('processInputData - Start');
     var inputMapLocal = new Map();
   var rulesEngine = buildRulesEngine();
   for (const singleInputLine of fileData) {
     processLine(singleInputLine, rulesEngine, inputMapLocal);
   }
+  log.debug('processInputData - End');
   return inputMapLocal;
 }
 
@@ -70,6 +71,7 @@ function processInputData(fileData) {
   @return Map containing the ratings as keys and points as values
 */
 function buildRulesEngine() {
+    log.debug('buildRulesEngine - Start');
   const favoriteToPointsMapping = new Map();
   favoriteToPointsMapping
     .set(1, 5)
@@ -77,7 +79,7 @@ function buildRulesEngine() {
     .set(3, 2)
     .set(4, 1)
     .set(5, 0);
-
+    log.debug('buildRulesEngine - End');
   return favoriteToPointsMapping;
 }
 
@@ -88,7 +90,7 @@ function buildRulesEngine() {
  * @param {*} mapToSort 
  */
 function sortMap(mapToSort){
-
+    log.debug('sortMap - Start');
     let sortedMap = new Map([...mapToSort].sort(([k, v], [k2, v2])=> {
 
         if (v > v2) {
@@ -113,7 +115,7 @@ function sortMap(mapToSort){
         }
         return 0; 
       }));
-
+      log.debug('sortMap - End');
       return sortedMap;
 }
 
@@ -125,6 +127,7 @@ function sortMap(mapToSort){
  * it exists with code 1 and displays the error message on console
  */ 
 function readCommandLine(){
+    log.debug('readCommandLine - Start');
     var myArgs = process.argv;
     var fullPathToFile;
     var normalizedFilePath;
@@ -146,42 +149,45 @@ function readCommandLine(){
                 process.exit(1);
             }       
     }
-    
+    log.debug('readCommandLine - End');
     return normalizedFilePath;
 }
 
+/**
+ * Reads the file pointed to by the pathToFile, returns an array of strings, 
+ * each element represents a line in the input file
+ * 
+ * @param {*} pathToFile 
+ */
+function readFile(pathToFile){
+    var inputFileData = fs.readFileSync(pathToFile, "utf-8").split(os.EOL);
+    return inputFileData;
+}
 
 function buildOutputString(mapToExport){
+    log.debug('buildOutputString - Start');
     var outputString='';
     var index = 0;
     var COMMA = ',';
     var SPACE = ' ';
     var DOT = '.';
-    var PTS = 'pt';
+    var PTS = '';
+    var EOL_STR = os.EOL;
 
     var mapEntries = mapToExport.entries();
 
+    log.debug(mapToExport.size);
+
     for (const entry of mapEntries) {
-        index = index +1;
+        index = index + 1;
+       
         PTS = (parseInt(entry[1]) > 1 ? 'pts' :'pt');
+        EOL_STR = (parseInt(index) == (mapToExport.size)) ? '' : os.EOL;
         outputString = outputString + index + DOT + SPACE+ entry[0] + COMMA +  SPACE + entry[1] + SPACE + PTS + 
-            ((index === mapEntries.length) ? '' : os.EOL);
+            EOL_STR;
       }
-
-    /*
-    mapToExport.forEach(
-            
-        (k, v) => 
-                //console.log(`key:${k} value:${v}`)
-                {
-                    log.debug(outputString + `${k}` +  `${v}` + os.EOL);}
-            
-    )
-    */
-
-
-
-    log.debug(outputString);
+  log.debug(outputString);
+    log.debug('buildOutputString - End');
 return outputString;
 }
 
@@ -192,24 +198,29 @@ return outputString;
  */
 function runTasteTestingSystem(){
 
+    log.debug('runTasteTestingSystem - Start');
+
     var fileName = readCommandLine();
 
     log.debug('About to read the file: ' + fileName);
-
-    var inputFileData = fs.readFileSync(fileName, "utf-8").split(/\r?\n/);
+    
+    var inputFileData = readFile (fileName);
 
     var finalPoints = processInputData(inputFileData);
 
     var sortedMap = sortMap(finalPoints);
 
-    //log.debug(sortedMap);
+    var finalOutput = buildOutputString(sortedMap);
 
-    buildOutputString(sortedMap);
+    log.info(finalOutput);
+
+    log.debug('runTasteTestingSystem - End');
 
     return sortedMap;
 
 }
 
+//main driver program - it orchestrates the sequence of calling other functions
 runTasteTestingSystem();
 
 //exporting method so they can be used by the testing framework Jasmine
